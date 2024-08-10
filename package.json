@@ -13,6 +13,7 @@
   "dependencies": {
     "@analog-labs/timegraph-js": "^0.1.1",
     "@analog-labs/timegraph-wasm": "^1.0.0",
+    "@polkadot/api": "^12.3.1",
     "@polkadot/keyring": "^13.0.2",
     "@polkadot/util": "^13.0.2",
     "@polkadot/util-crypto": "^13.0.2",

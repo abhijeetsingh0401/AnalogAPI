@@ -1,25 +1,24 @@
 import express from 'express';
-import { Keyring } from '@polkadot/api';
+import Keyring from "@polkadot/keyring";
+import { cryptoWaitReady } from '@polkadot/util-crypto';
+import { build_apikey, build_ssk, encode_ssk, new_cert } from "@analog-labs/timegraph-wasm";
+import { TimegraphClient } from "@analog-labs/timegraph-js";
 import bodyParser from 'body-parser';
 
-// Helper functions (you'll need to implement these)
-import { new_cert, build_apikey, encode_ssk, build_ssk } from './helpers.js';
+await cryptoWaitReady();
 
 const app = express();
 app.use(bodyParser.json());
-
-const keyring = new Keyring({ type: 'sr25519' });
 
 app.post('/api/generate', async (req, res) => {
     try {
         const { seedPhrase, hashId, fields, limit } = req.body;
 
+        const keyring = new Keyring({ type: "sr25519" });
         const keypair = keyring.addFromUri(seedPhrase);
 
         const [cert_data, secret] = new_cert(keypair.address, "developer");
-
         const signature = keypair.sign(cert_data);
-
         const key = build_apikey(secret, cert_data, signature);
 
         const ssk_data = encode_ssk({
@@ -27,6 +26,7 @@ app.post('/api/generate', async (req, res) => {
             key: keypair.address,
             expiration: 0,
         });
+
         const ssk_signature = keypair.sign(ssk_data);
         const ssk = build_ssk(ssk_data, ssk_signature);
 
@@ -38,7 +38,7 @@ app.post('/api/generate', async (req, res) => {
         const response = await client.view.data({
             hashId,
             fields,
-            limit
+            limit,
         });
 
         res.json({ apiKey: key, data: response });
